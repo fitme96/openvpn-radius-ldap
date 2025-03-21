@@ -1,0 +1,12 @@
+services:
+  freeradius:
+    image: fitme96/freeradius-server
+    network_mode: host
+    environment:
+      - SECRET=ovpn
+      - OVPN_IPADDR=openvpn
+      - LDAP_ADDR=127.0.0.1
+      - LDAP_ADMIN_PASSWD=password
+      - LDAP_ADMIN_ID=cn=admin,dc=example,dc=com
+      - LDAP_BASE_DN=dc=example,dc=com
+      - RADIUS_SERVER_PORT=1812

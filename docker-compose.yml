@@ -1,0 +1,57 @@
+services:
+  openldap:
+    image: docker.io/bitnami/openldap:2.6
+    restart: always
+    ports:
+      - '389:389'
+      - '636:636'
+    environment:
+      - LDAP_ROOT=dc=yl,dc=com
+      - LDAP_ADMIN_DN=cn=admin,dc=yl,dc=com
+      - LDAP_ADMIN_PASSWORD=adminpassword
+      - LDAP_ADMIN_USERNAME=admin
+      - LDAP_PORT_NUMBER=389
+      - LDAP_LDAPS_PORT_NUMBER=636
+    volumes:
+      - 'openldap_data:/bitnami/openldap'
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    restart: always
+    ports:
+      - 18081:80
+    environment:
+      - PHPLDAPADMIN_HTTPS=false
+      - PHPLDAPADMIN_LDAP_HOSTS=openldap
+  freeradius:
+    image: fitme96/freeradius-server
+    restart: always
+    ports:
+      - 1815:1815
+      - 1813:1813
+      - 1812:1812
+    environment:
+      - SECRET=ylovpn
+      - OVPN_IPADDR=openvpn
+      - LDAP_ADDR=openldap
+      - LDAP_ADMIN_PASSWD=adminpassword
+      - LDAP_ADMIN_ID=cn=admin,dc=yl,dc=com
+      - LDAP_BASE_DN=dc=yl,dc=com
+      - RADIUS_SERVER_PORT=1815
+    entrypoint: tail -F /var/log/test
+  openvpn:
+    image: fitme96/openvpn-radiusplugin
+    container_name: openvpn
+    restart: always
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./openvpn:/etc/openvpn
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.default.forwarding=1
+      - net.ipv6.conf.all.forwarding=1
+    
+volumes:
+  openldap_data:
